@@ -1,0 +1,14 @@
+#image: maven:3.5.3-jdk-8
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  script:
+    - cp * public
+  artifacts:
+    paths:
+      - public
+  only:
+    - master
