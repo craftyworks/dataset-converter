@@ -13,7 +13,7 @@
     <div class="container">
         <div class="py-5 text-center">
             <h2>MiPlatform Dataset Converter</h2>
-            <p class="lead">Miplatform Dataset XML 을 Nexacro Dataset XML 로 변환 합니다. 왼쪽 Box 에 MiPlatform Dataset XML 문자열 입력 후 '변환' 버튼을 클릭하면 오른쪽 Box 에 Naxacro 문법으로 변환된 XML 문자열이 출력됩니다.</p>
+            <p class="lead">Miplatform Dataset XML 을 Nexacro Dataset XML 로 변환 합니다. 첫번째 Box 에 MiPlatform Dataset XML 문자열 입력 후 '변환' 버튼을 클릭하면 두번째 Box 에 Naxacro 문법으로 변환된 XML 문자열이 출력됩니다.</p>
         </div>
         <div class="row">
             <div class="col-md-6">
@@ -36,11 +36,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2"></script>
     <script>
         $('[data-toggle="tooltip"]').tooltip().on("mouseleave", function() {
             $(this).tooltip("hide")
         })
-
+        
         var e = new ClipboardJS('.btn-clipboard');
         e.on('success', function(e) {
             $(e.trigger).attr("title", "복사됨!").tooltip("_fixTitle").tooltip("show").attr("title", "클립보드로 복사").tooltip("_fixTitle");
@@ -52,17 +53,76 @@
             $(e.trigger).attr("title", n).tooltip("_fixTitle").tooltip("show").attr("title", "클립보드로 복사").tooltip("_fixTitle")
         });
 
+        // Check IE
+        var agent = navigator.userAgent.toLowerCase();
+        if ( (navigator.appName == 'Netscape' && agent.indexOf('trident') != -1) || (agent.indexOf("msie") != -1)) {
+            alert('Internet Explorer 는 지원하지 않습니다.');
+        }
+
+        var sampleDs = 
+            "<Dataset DataSetType=\"Dataset\" Id=\"Dataset0\">\n"+
+            "	<Contents>\n"+
+            "		<colinfo id=\"column0\" size=\"256\" summ=\"default\" type=\"STRING\"/>\n"+
+            "		<colinfo id=\"column1\" size=\"256\" summ=\"default\" type=\"STRING\"/>\n"+
+            "		<colinfo id=\"column2\" size=\"256\" summ=\"default\" type=\"STRING\"/>\n"+
+            "		<record>\n"+
+            "			<column0>1</column0>\n"+
+            "			<column1>2</column1>\n"+
+            "			<column2>3</column2>\n"+
+            "		</record>\n"+
+            "		<record>\n"+
+            "			<column0>A</column0>\n"+
+            "			<column1>B</column1>\n"+
+            "			<column2>C</column2>\n"+
+            "		</record>\n"+
+            "		<record>\n"+
+            "			<column0>가</column0>\n"+
+            "			<column1>나</column1>\n"+
+            "			<column2></column2>\n"+
+            "		</record>\n"+
+            "	</Contents>\n"+
+            "</Dataset>";
+        $('#miplatformDataset').val(sampleDs);
+
         $('.btn-convert').on('click', function(event) {
             var xmlDoc = new DOMParser().parseFromString($("#miplatformDataset").val(), "text/xml");
             var dsNodes = xmlDoc.getElementsByTagName("Dataset");
+            if(!dsNodes || dsNodes.length === 0) {
+                swal(
+                    '실패',
+                    'MiPlatform Dataset XML 이 올바른지 확인해 주세요.',
+                    'error'
+                );
+                return;
+            }
             var strBuffer = "";
             for (var i = 0; i < dsNodes.length; i++) {
                 var dsObj = parseDataset(dsNodes[i]);
                 strBuffer += convertDataset(dsObj) + '\n';
             };
             $("#nexacroDataset").val(strBuffer);
+            swal(
+                '성공!!!',
+                'Nexacro Dataset 변환이 성공하였습니다.',
+                'success'
+            )
         });
 
+        // Nexacro Dataset attribute name map
+        var dsAttrMap = {
+            argument : 'arguments', 
+            cancolumnchange  : 'cancolumnchange', 
+            canrowposchange : 'canrowposchange', 
+            filterexpr : 'filterstr', 
+            firefirstcount : 'firefirstcount', 
+            firenextcount : 'firenextcount', 
+            id : 'id', 
+            oncolumnchanged : 'oncolumnchanged', 
+            onloadcompleted : 'onload', 
+            onrowposchanged : 'onrowposchanged', 
+            reversesubsum : 'reversesubsum', 
+            servicedsetid  : 'serverdatasetid', 
+        }
         /**
          * Dataset Object 를 Nexacro Dataset XML 로 변환
          */
@@ -73,7 +133,11 @@
 
             //Dataset
             var dsNode = xmlDoc.createElement("Dataset");
-            dsNode.setAttribute("id", dsObj.id);
+            for (var name in dsObj) {
+                if(dsAttrMap.hasOwnProperty(name)) {
+                    dsNode.setAttribute(dsAttrMap[name], dsObj[name]);
+                }
+            }            
             var colinfoNode = xmlDoc.createElement("ColumnInfo");
             dsNode.appendChild(colinfoNode);
             var rowsNode = xmlDoc.createElement("Rows");
@@ -148,7 +212,10 @@
                 columns: [],
                 rows: []
             };
-            dsObj.id = ds.getAttribute("Id");
+            var attrs = ds.attributes;
+            for (var i = 0; i < attrs.length; i++) {
+                dsObj[attrs[i].name.toLowerCase()] = attrs[i].value;
+            }
 
             var cols = ds.querySelectorAll("Contents > colinfo");
             for (var i = 0; i < cols.length; i++) {
@@ -159,7 +226,6 @@
             for (var i = 0; i < records.length; i++) {
                 dsObj.rows[i] = parseRecord(records[i]);
             }
-            console.log(JSON.stringify(dsObj));
             return dsObj;
         }
 
