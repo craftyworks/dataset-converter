@@ -103,6 +103,16 @@ function convertDataset(dsObj) {
     var rowsNode = xmlDoc.createElement("Rows");
     dsNode.appendChild(rowsNode);
 
+	//ConstColumn
+	for (var i = 0; i < dsObj.constcols.length; i++) {
+        var colNode = xmlDoc.createElement("ConstColumn");
+        var colObj = dsObj.constcols[i];
+        colNode.setAttribute("id", colObj["id"]);
+		colNode.setAttribute("type", colObj["type"]);
+		colNode.setAttribute("size", 255);
+		colNode.setAttribute("value", colObj["value"]);
+        colinfoNode.appendChild(colNode);
+    }
     //ColumnInfo
     for (var i = 0; i < dsObj.columns.length; i++) {
         var colNode = xmlDoc.createElement("Column");
@@ -169,12 +179,18 @@ function formatXml(xml) {
  */
 function parseDataset(ds) {
     var dsObj = {
+		constcols: [], 
         columns: [],
         rows: []
     };
     var attrs = ds.attributes;
     for (var i = 0; i < attrs.length; i++) {
         dsObj[attrs[i].name.toLowerCase()] = attrs[i].value;
+    }
+
+    var constcols = ds.querySelectorAll("Contents > column");
+    for (var i = 0; i < constcols.length; i++) {
+        dsObj.constcols[i] = parseConstColumn(constcols[i]);
     }
 
     var cols = ds.querySelectorAll("Contents > colinfo");
@@ -187,6 +203,18 @@ function parseDataset(ds) {
         dsObj.rows[i] = parseRecord(records[i]);
     }
     return dsObj;
+}
+
+/**
+ * column XML 노드를 constcolumn Object 로 변환
+ */
+function parseConstColumn(column) {
+    var colObj = {};
+    var attrs = column.attributes;
+	colObj.id = attrs["id"].value;
+	colObj.type = attrs["type"].value;
+	colObj.value = column.textContent;
+    return colObj;
 }
 
 /**
