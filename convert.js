@@ -45,7 +45,7 @@ var sampleDs =
 $('#miplatformDataset').val(sampleDs);
 
 $('.btn-convert').on('click', function(event) {
-    var xmlDoc = new DOMParser().parseFromString($("#miplatformDataset").val(), "text/xml");
+    var xmlDoc = new DOMParser().parseFromString("<root>" + $("#miplatformDataset").val() + "</root>", "text/xml");
     var dsNodes = xmlDoc.getElementsByTagName("Dataset");
     if(!dsNodes || dsNodes.length === 0) {
         swal(
@@ -58,6 +58,7 @@ $('.btn-convert').on('click', function(event) {
     var strBuffer = "";
     for (var i = 0; i < dsNodes.length; i++) {
         var dsObj = parseDataset(dsNodes[i]);
+		console.log(JSON.stringify(dsObj));
         strBuffer += convertDataset(dsObj) + '\n';
     };
     $("#nexacroDataset").val(strBuffer);
