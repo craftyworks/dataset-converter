@@ -19,7 +19,7 @@ if ( (navigator.appName == 'Netscape' && agent.indexOf('trident') != -1) || (age
     alert('Internet Explorer 는 지원하지 않습니다.');
 }
 
-var sampleDs = 
+var sampleDs =
     "<Dataset DataSetType=\"Dataset\" Id=\"Dataset0\">\n"+
     "	<Contents>\n"+
     "		<colinfo id=\"column0\" size=\"256\" summ=\"default\" type=\"STRING\"/>\n"+
@@ -48,7 +48,7 @@ $('.btn-convert').on('click', function(event) {
     var xmlDoc = new DOMParser().parseFromString("<root>" + $("#miplatformDataset").val() + "</root>", "text/xml");
     var dsNodes = xmlDoc.getElementsByTagName("Dataset");
     if(!dsNodes || dsNodes.length === 0) {
-        swal(
+        Swal.fire(
             '실패',
             'MiPlatform Dataset XML 이 올바른지 확인해 주세요.',
             'error'
@@ -62,7 +62,7 @@ $('.btn-convert').on('click', function(event) {
         strBuffer += convertDataset(dsObj) + '\n';
     };
     $("#nexacroDataset").val(strBuffer);
-    swal(
+    Swal.fire(
         '성공!!!',
         'Nexacro Dataset 변환이 성공하였습니다.',
         'success'
@@ -71,18 +71,18 @@ $('.btn-convert').on('click', function(event) {
 
 // Nexacro Dataset attribute name map
 var dsAttrMap = {
-    argument : 'arguments', 
-    cancolumnchange  : 'cancolumnchange', 
-    canrowposchange : 'canrowposchange', 
-    filterexpr : 'filterstr', 
-    firefirstcount : 'firefirstcount', 
-    firenextcount : 'firenextcount', 
-    id : 'id', 
-    oncolumnchanged : 'oncolumnchanged', 
-    onloadcompleted : 'onload', 
-    onrowposchanged : 'onrowposchanged', 
-    reversesubsum : 'reversesubsum', 
-    servicedsetid  : 'serverdatasetid', 
+    argument : 'arguments',
+    cancolumnchange  : 'cancolumnchange',
+    canrowposchange : 'canrowposchange',
+    filterexpr : 'filterstr',
+    firefirstcount : 'firefirstcount',
+    firenextcount : 'firenextcount',
+    id : 'id',
+    oncolumnchanged : 'oncolumnchanged',
+    onloadcompleted : 'onload',
+    onrowposchanged : 'onrowposchanged',
+    reversesubsum : 'reversesubsum',
+    servicedsetid  : 'serverdatasetid',
 }
 /**
  * Dataset Object 를 Nexacro Dataset XML 로 변환
@@ -98,7 +98,7 @@ function convertDataset(dsObj) {
         if(dsAttrMap.hasOwnProperty(name)) {
             dsNode.setAttribute(dsAttrMap[name], dsObj[name]);
         }
-    }            
+    }
     var colinfoNode = xmlDoc.createElement("ColumnInfo");
     dsNode.appendChild(colinfoNode);
     var rowsNode = xmlDoc.createElement("Rows");
@@ -180,7 +180,7 @@ function formatXml(xml) {
  */
 function parseDataset(ds) {
     var dsObj = {
-		constcols: [], 
+		constcols: [],
         columns: [],
         rows: []
     };
